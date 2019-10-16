@@ -10,7 +10,8 @@ router.use(bodyParser.urlencoded({extended: true}))
 router.get('', register.status)
 router.get('/available-username', register.isAvailableUsername)
 router.post('/subscribe', register.subscribe)
-router.post('/add-user', register.addUser)
 router.post('/activate-account', register.activateAccount)
+router.post('/add-user', register.addUser)
+router.post('/change-role', register.changeRole)
 
 module.exports = router

@@ -1,9 +1,18 @@
-const db = require('./dbConnection')
+const db = require('./mysqlConnection')
 const registerQueries = {}
 
-registerQueries.getCountByUsername = (username) => {
+registerQueries.getCompanyCountByUsername = (username) => {
     return new Promise((resolve, reject) => {
         db.query('SELECT COUNT(*) as count FROM company WHERE username = ?', [username], (error, result, fields) => {
+            if (error) reject('Error fetching username ' + error.code)
+            if (result) resolve(result)
+        })
+    })
+}
+
+registerQueries.getUserCountByUsername = (username) => {
+    return new Promise((resolve, reject) => {
+        db.query('SELECT COUNT(*) as count FROM user WHERE username = ?', [username], (error, result, fields) => {
             if (error) reject('Error fetching username ' + error.code)
             if (result) resolve(result)
         })
