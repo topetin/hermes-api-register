@@ -1,33 +1,27 @@
 const db = require('./mysqlConnection')
 const registerQueries = {}
 
-registerQueries.getCompanyCountByUsername = (username) => {
-    return new Promise((resolve, reject) => {
-        db.query('SELECT COUNT(*) as count FROM company WHERE username = ?', [username], (error, result, fields) => {
-            if (error) reject('Error fetching username ' + error.code)
-            if (result) resolve(result)
-        })
-    })
-}
-
-registerQueries.getUserCountByUsername = (username) => {
-    return new Promise((resolve, reject) => {
-        db.query('SELECT COUNT(*) as count FROM user WHERE username = ?', [username], (error, result, fields) => {
-            if (error) reject('Error fetching username ' + error.code)
-            if (result) resolve(result)
-        })
-    })
+registerQueries.getUserCountByUsername = (username, table) => {
+    return db.query(`SELECT COUNT(*) as count FROM ${table} WHERE username = ?`, [username])
 }
 
 registerQueries.createSubscription = (company, username, invoice) => {
     return new Promise((resolve, reject) => {
         db.query('INSERT INTO company SET ?', {name: company, username: username})
         .then((result) => {
-            return db.query('INSERT INTO subscription SET ?', {company_id: result.insertId, invoice_num: invoice})
-            .then(() => { return resolve(true) })
+            let companyId = result.insertId;
+            return db.query('INSERT INTO subscription SET ?', {company_id: companyId, invoice_num: invoice})
+            .then(() => { return resolve(companyId) })
         })
         .catch((error) => { return reject('Error inserting in Database ' + error.code) })
     })
 }
+
+registerQueries.isNewUser = (userID, userType) => {
+    let table = userType === 1 ? 'company' : 'user';
+    return db.query(`SELECT password FROM ${table} WHERE id = ?`, [userID])
+}
+
+
 
 module.exports = registerQueries

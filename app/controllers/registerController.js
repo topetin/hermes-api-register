@@ -16,14 +16,14 @@ registerController.isAvailableUsername = (req, res) => {
         res.status(400).json({date: moment().format(), code: 400, message: 'Missing required parameters'})
     }
     
-    mysqlDb.getCompanyCountByUsername(username).then((result) => {
+    mysqlDb.getUserCountByUsername(username, 'company').then((result) => {
         if (result[0].count === 0) {
             res.status(200).json({date: moment().format(), code: 200, message: 'Username is available.'})
         } else {
             res.status(400).json({date: moment().format(), code: 400, message: 'Username is taken.'})
         }
     }).catch((error) => {
-        res.status(400).json({date: moment().format(), code: 400, message: error})
+        res.status(500).json({date: moment().format(), code: 500, message: error.code})
     })
 }
 
@@ -36,11 +36,11 @@ registerController.subscribe = (req, res) => {
         res.status(400).json({date: moment().format(), code: 400, message: 'Missing required parameters'})
     }
 
-    mysqlDb.getCompanyCountByUsername(username).then((result) => {
+    mysqlDb.getUserCountByUsername(username, 'company').then((result) => {
         if (result[0].count === 0) {
             mysqlDb.createSubscription(company, username, invoice)
-            .then(() => {
-                emailService.sendEmailSubscription(username)
+            .then((result) => {
+                emailService.sendEmailSubscription(username, result)
                 res.status(200).json({date: moment().format(), code: 200, message: 'Subscription successfuly created.'})
             })
             .catch((error) => {
@@ -50,12 +50,30 @@ registerController.subscribe = (req, res) => {
             res.status(400).json({date: moment().format(), code: 400, message: 'Username is taken.'})
         }
     }).catch((error) => {
-        res.status(400).json({date: moment().format(), code: 400, message: error})
+        res.status(500).json({date: moment().format(), code: 500, message: error.code})
     })
 }
 
 registerController.activateAccount = (req, res) => {
-    
+    const userId = req.body.id
+    const userType = req.body.type
+    const password = req.body.password
+
+    if (!userId || !userType || password) return res.status(400).json({date: moment().format(), code: 400, message: 'Missing required parameters'})
+
+    mysqlDb.isNewUser(userId, Number(userType))
+    .then((result) => {
+        if (result.length === 0) {
+            res.status(404).json({date: moment().format(), code: 404, message: 'User not found'})
+        } else {
+            if (result[0].password === null) {
+                return res.status(200).json({date: moment().format(), code: 200, message: true})
+            }
+            return res.status(403).json({date: moment().format(), code: 403, message: false})
+        }
+    }).catch((error) => {
+        res.status(500).json({date: moment().format(), code: 500, message: error})
+    })
 }
 
 registerController.addUser = (req, res) => {
