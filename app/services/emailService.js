@@ -1,9 +1,16 @@
 const nodemailer = require('nodemailer')
 const emailService = {}
 
-const sender = 'Hermes Chat App'
-const newSubscriptionSubject = 'Gracias por suscribirte!'
-const newSubscriptionText = 'Segui el link para generar tu password: http://localhost:4600/activateAccount?type=1&id='
+const SENDER = 'Hermes Chat App'
+const EMAIL_DEF = [
+  {
+    id: 1,
+    'subscription': {
+      subject: 'Gracias por suscribirte!',
+      body: 'Segui el link para generar tu password: http://localhost:4600/activateAccount?username='
+    }
+  }
+]
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -20,16 +27,17 @@ const mailOptions = {
     text: 'That was easy!'
 }
 
-emailService.sendEmailSubscription = (userEmail, userId) => {
-  const text = newSubscriptionText + userId
+emailService.sendEmail = (type, email, role_id) => {
+  const def = EMAIL_DEF[role_id-1][type]
+  const text = def.body + email
     transporter.sendMail({
-        from: sender,
-        to: userEmail,
-        subject: newSubscriptionSubject,
+        from: SENDER,
+        to: email,
+        subject: def.subject,
         text: text
     }, function(error, info){
         if (error) {
-          console.log(error);
+          throw error
         } else {
           console.log('Email sent: ' + info.response);
         }

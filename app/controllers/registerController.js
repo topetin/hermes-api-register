@@ -1,6 +1,7 @@
 const moment = require('moment')
-const mysqlDb = require('../repository/mysql/mysqlQueries')
+const db = require('../repository/mysql/registerQueries')
 const emailService = require('../services/emailService')
+const bcrypt = require('bcrypt')
 const mongoDb = require('../repository/mongo/mongoQueries')
 
 const registerController = {}
@@ -12,67 +13,73 @@ registerController.status = (req, res) => {
 registerController.isAvailableUsername = (req, res) => {
     const username = req.query.username
 
-    if (!username) {
-        res.status(400).json({date: moment().format(), code: 400, message: 'Missing required parameters'})
-    }
+    if (!username) return res.status(400).json({date: moment().format(), code: 400, message: 'Missing required parameters'})
     
-    mysqlDb.getUserCountByUsername(username, 'company').then((result) => {
+    db.getUserCountByUsername(username).then((result) => {
         if (result[0].count === 0) {
             res.status(200).json({date: moment().format(), code: 200, message: 'Username is available.'})
         } else {
             res.status(400).json({date: moment().format(), code: 400, message: 'Username is taken.'})
         }
     }).catch((error) => {
-        res.status(500).json({date: moment().format(), code: 500, message: error.code})
+        res.status(500).json({date: moment().format(), code: 500, message: error.message})
     })
 }
 
 registerController.subscribe = (req, res) => {
-    const company = req.body.company
+    const name = req.body.name
     const username = req.body.username
     const invoice = req.body.invoice
 
-    if (!company || !username || !invoice) {
-        res.status(400).json({date: moment().format(), code: 400, message: 'Missing required parameters'})
-    }
+    if (!name || !username || !invoice) return res.status(400).json({date: moment().format(), code: 400, message: 'Missing required parameters'})
 
-    mysqlDb.getUserCountByUsername(username, 'company').then((result) => {
+    db.getUserCountByUsername(username)
+    .then((result) => {
         if (result[0].count === 0) {
-            mysqlDb.createSubscription(company, username, invoice)
+            db.createSubscription(name, username, invoice)
             .then((result) => {
-                emailService.sendEmailSubscription(username, result)
+                const rows = JSON.parse(JSON.stringify(result[0]));
+                emailService.sendEmail('subscription', rows[0].username, rows[0].user_role_id)
                 res.status(200).json({date: moment().format(), code: 200, message: 'Subscription successfuly created.'})
             })
             .catch((error) => {
-                res.status(400).json({date: moment().format(), code: 400, message: error})
+                res.status(400).json({date: moment().format(), code: 400, message: error.message})
             })
         } else {
             res.status(400).json({date: moment().format(), code: 400, message: 'Username is taken.'})
         }
     }).catch((error) => {
-        res.status(500).json({date: moment().format(), code: 500, message: error.code})
+        res.status(500).json({date: moment().format(), code: 500, message: error.message})
     })
 }
 
-registerController.activateAccount = (req, res) => {
-    const userId = req.body.id
-    const userType = req.body.type
+registerController.activateAccount = async (req, res) => {
+    const username = req.body.username
     const password = req.body.password
 
-    if (!userId || !userType || password) return res.status(400).json({date: moment().format(), code: 400, message: 'Missing required parameters'})
+    if (!username || !password) return res.status(400).json({date: moment().format(), code: 400, message: 'Missing required parameters'})
 
-    mysqlDb.isNewUser(userId, Number(userType))
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt)
+
+    db.isNewUser(username)
     .then((result) => {
-        if (result.length === 0) {
-            res.status(404).json({date: moment().format(), code: 404, message: 'User not found'})
-        } else {
-            if (result[0].password === null) {
+        if (result.length === 0) return res.status(404).json({date: moment().format(), code: 404, message: 'User not found'}) 
+        if (result[0].password === null) {
+            db.activateUser(result[0].id, hashedPassword)
+            .then((result) => {
+                if (result.affectedRows === 0) return res.status(404).json({date: moment().format(), code: 403, message: false})
                 return res.status(200).json({date: moment().format(), code: 200, message: true})
-            }
-            return res.status(403).json({date: moment().format(), code: 403, message: false})
+            })
+            .catch((error) => {
+                res.status(500).json({date: moment().format(), code: 500, message: error.message})
+            })
+        } else {
+            res.status(403).json({date: moment().format(), code: 403, message: 'Account is already active'})
         }
-    }).catch((error) => {
-        res.status(500).json({date: moment().format(), code: 500, message: error})
+    })
+    .catch((error) => {
+        res.status(500).json({date: moment().format(), code: 500, message: error.message})
     })
 }
 
@@ -96,7 +103,7 @@ registerController.addUser = (req, res) => {
     //     res.status(400).json({date: moment().format(), code: 400, message: 'Missing required parameters'})
     // }
 
-    // mysqlDb.getCompanyCountByUsername(username).then((result) => {
+    // db.getCompanyCountByUsername(username).then((result) => {
     //     if (result[0].count === 0) {
 
     //     } else {
