@@ -2,6 +2,7 @@ const moment = require('moment')
 const db = require('../repository/mysql/registerQueries')
 const emailService = require('../services/emailService')
 const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
 const mongoDb = require('../repository/mongo/mongoQueries')
 
 const registerController = {}
@@ -83,36 +84,42 @@ registerController.activateAccount = async (req, res) => {
     })
 }
 
-registerController.addUser = (req, res) => {
-    const authToken = req.body.authToken
-    const companyId = req.body.company
+registerController.addUser = async (req, res) => {
+    const token = req.headers['authorization']
 
-    if (!authToken || !companyId) {
-        res.status(400).json({date: moment().format(), code: 400, message: 'Missing required parameters'})
-    }
+    if (!token) return res.status(401).json({date: moment().format(), code: 400, message: 'Missing token'})
 
-    //search in session service if company is logged in
+    const auth = await verifyToken(token)
+    .then((auth) => {
+        return auth.username
+    })
+    .catch((error) => {
+        res.status(401).json({date: moment().format(), code: 400, message: error.message});
+    })
 
-    //si esta loggeado
+    let added = [];
+    let notAdded = [];
 
-    const username = req.body.username
-    const name = req.body.name
-    const role = req.body.role
+    req.body.forEach(element => {
+        if (!element.name || !element.username || !element.role) 
+            return notAdded.push({ element: element, cause: 'Missing required parameters' })
+        db.getUserCountByUsername(element.username)
+        .then((result) => {
+            if (result[0].count !== 0) 
+                return notAdded.push({ element: element, cause: 'Username taken' })
+            db.addUser
+        })
+    });
+}
 
-    // if (!username || !name || ! role) {
-    //     res.status(400).json({date: moment().format(), code: 400, message: 'Missing required parameters'})
-    // }
-
-    // db.getCompanyCountByUsername(username).then((result) => {
-    //     if (result[0].count === 0) {
-
-    //     } else {
-    //         res.status(400).json({date: moment().format(), code: 400, message: 'Username is taken.'})
-    //     }
-    // }).catch((error) => {
-    //     res.status(400).json({date: moment().format(), code: 400, message: error})
-    // })
-
+const verifyToken = async (token) => {    
+    token = token.replace('Bearer ', '')
+    return new Promise((resolve, reject) => {
+        jwt.verify(token, 'Secret Password', (err, user) => {
+            if (err) return reject(err);
+            return resolve(user);
+        })
+    })
 }
 
 registerController.changeRole = (req, res) => {

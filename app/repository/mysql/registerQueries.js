@@ -19,4 +19,6 @@ registerQueries.activateUser = (id, password) => {
     return db.query(`UPDATE user SET password = ? WHERE id = ?`, [password, id]);
 }
 
+// registerQueries.addUser({})
+
 module.exports = registerQueries

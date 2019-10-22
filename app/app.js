@@ -4,7 +4,7 @@ const cors = require('cors')
 const mongoose = require('mongoose')
 
 const registerRouter = require('./routes/registerRouter.js')
-const loginRouter = require('./routes/loginRouter.js')
+const authRouter = require('./routes/authRouter.js')
 
 const app = express()
 const server = http.createServer(app)
@@ -18,9 +18,9 @@ mongoose.connect('mongodb+srv://admin:Hermes2019@hermes-z3jam.mongodb.net/test?r
 
 const port = process.env.PORT || 3000
 
-app.use(cors({origin: 'https://hermes-chat-ui.herokuapp.com'}))
+app.use(cors({origin: 'http://localhost:4200'}))
 app.use(registerRouter)
-app.use(loginRouter)
+app.use(authRouter)
 
 server.listen(port, () => {
     console.log('Server is up on port', port)
