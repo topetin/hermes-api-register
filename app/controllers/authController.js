@@ -1,6 +1,7 @@
 const moment = require('moment')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const ROLES = require('../data/Roles')
 const db = require('../repository/mysql/loginQueries')
 
 const loginController = {}
@@ -19,8 +20,9 @@ loginController.login = (req, res) => {
             return res.status(400).json({date: moment().format(), code: 400, message: 'Invalid email or password.'})
         }
         let exp = 60 * 60 * 24;
-        let token = jwt.sign({username: username}, 'Secret Password', { expiresIn: exp })
-        res.status(200).json({token: token, expiresIn: exp})
+        const user_role = ROLES.getRoleById(result[0].role_id)
+        let token = jwt.sign({username: username, role: user_role}, 'Secret Password', { expiresIn: exp })
+        res.status(200).json({token: token})
     })
     .catch((error) => {
         res.status(500).json({date: moment().format(), code: 500, message: error.message})
