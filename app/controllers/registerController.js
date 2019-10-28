@@ -41,7 +41,7 @@ registerController.subscribe = (req, res) => {
             .then((result) => {
                 const rows = JSON.parse(JSON.stringify(result[0]));
                 emailService.sendEmail('subscription', rows[0].username, rows[0].user_role_id)
-                res.status(200).json({date: moment().format(), code: 200, message: 'Subscription successfuly created.'})
+                res.status(200).json({date: moment().format(), code: 200, message: username})
             })
             .catch((error) => {
                 res.status(400).json({date: moment().format(), code: 400, message: error.message})

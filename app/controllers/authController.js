@@ -14,7 +14,7 @@ loginController.login = (req, res) => {
 
     db.getCredentials(username)
     .then(async(result) => {
-        if (result.length === 0) return res.status(404).json({date: moment().format(), code: 404, message: 'Invalid email or password.'})
+        if (result.length === 0 || result[0].password === null) return res.status(404).json({date: moment().format(), code: 404, message: 'Invalid email or password.'})
         const validPassword = await bcrypt.compare(password, result[0].password);
         if (!validPassword) {
             return res.status(400).json({date: moment().format(), code: 400, message: 'Invalid email or password.'})
