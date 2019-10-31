@@ -1,8 +1,8 @@
 const db = require('./mysqlConnection')
 const loginQueries = {}
 
-loginQueries.getCredentials = (username) => {
-    return db.query('SELECT id, password, role_id FROM user WHERE username = ?', [username])
+loginQueries.getCredentials = (email) => {
+    return db.query('SELECT * FROM user WHERE email = ?', [email])
 }
 
 module.exports = loginQueries

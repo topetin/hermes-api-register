@@ -8,7 +8,7 @@ router.use(bodyParser.json())
 router.use(bodyParser.urlencoded({extended: true}))
 
 router.get('', register.status)
-router.get('/available-username', register.isAvailableUsername)
+router.get('/is-available-user', register.isAvailableUser)
 router.post('/subscribe', register.subscribe)
 router.post('/activate-account', register.activateAccount)
 router.post('/add-user', register.addUser)

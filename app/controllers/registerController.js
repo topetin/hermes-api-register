@@ -11,16 +11,16 @@ registerController.status = (req, res) => {
     res.status(200).json({date: moment().format(), code: 200, message: 'Register service is up'})
 }
 
-registerController.isAvailableUsername = (req, res) => {
-    const username = req.query.username
+registerController.isAvailableUser = (req, res) => {
+    const email = req.query.email
 
-    if (!username) return res.status(400).json({date: moment().format(), code: 400, message: 'Missing required parameters'})
+    if (!email) return res.status(400).json({date: moment().format(), code: 400, message: 'Missing required parameters'})
     
-    db.getUserCountByUsername(username).then((result) => {
+    db.getUserCountByEmail(email).then((result) => {
         if (result[0].count === 0) {
-            res.status(200).json({date: moment().format(), code: 200, message: 'Username is available.'})
+            res.status(200).json({date: moment().format(), code: 200, message: 'User is available.'})
         } else {
-            res.status(400).json({date: moment().format(), code: 400, message: 'Username is taken.'})
+            res.status(400).json({date: moment().format(), code: 400, message: 'User already registered.'})
         }
     }).catch((error) => {
         res.status(500).json({date: moment().format(), code: 500, message: error.message})
@@ -29,19 +29,20 @@ registerController.isAvailableUsername = (req, res) => {
 
 registerController.subscribe = (req, res) => {
     const name = req.body.name
-    const username = req.body.username
+    const email = req.body.email
     const invoice = req.body.invoice
 
-    if (!name || !username || !invoice) return res.status(400).json({date: moment().format(), code: 400, message: 'Missing required parameters'})
+    if (!name || !email || !invoice) return res.status(400).json({date: moment().format(), code: 400, message: 'Missing required parameters'})
 
-    db.getUserCountByUsername(username)
+    db.getUserCountByEmail(email)
     .then((result) => {
         if (result[0].count === 0) {
-            db.createSubscription(name, username, invoice)
+            const username = generateUsername(email)
+            db.createSubscription(name, username, email, invoice)
             .then((result) => {
                 const rows = JSON.parse(JSON.stringify(result[0]));
-                emailService.sendEmail('subscription', rows[0].username, rows[0].user_role_id)
-                res.status(200).json({date: moment().format(), code: 200, message: username})
+                emailService.sendEmail('subscription', rows[0].email, rows[0].user_role_id)
+                res.status(200).json({date: moment().format(), code: 200, message: email})
             })
             .catch((error) => {
                 res.status(400).json({date: moment().format(), code: 400, message: error.message})
@@ -55,15 +56,15 @@ registerController.subscribe = (req, res) => {
 }
 
 registerController.activateAccount = async (req, res) => {
-    const username = req.body.username
+    const email = req.body.email
     const password = req.body.password
 
-    if (!username || !password) return res.status(400).json({date: moment().format(), code: 400, message: 'Missing required parameters'})
+    if (!email || !password) return res.status(400).json({date: moment().format(), code: 400, message: 'Missing required parameters'})
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt)
 
-    db.isNewUser(username)
+    db.isNewUser(email)
     .then((result) => {
         if (result.length === 0) return res.status(404).json({date: moment().format(), code: 404, message: 'User not found'}) 
         if (result[0].password === null) {
@@ -124,6 +125,10 @@ const verifyToken = async (token) => {
 
 registerController.changeRole = (req, res) => {
 
+}
+
+const generateUsername = (email) => {
+    return email.split('@')[0];
 }
 
 module.exports = registerController;

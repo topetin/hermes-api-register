@@ -7,7 +7,7 @@ const EMAIL_DEF = [
     id: 1,
     'subscription': {
       subject: 'Gracias por suscribirte!',
-      body: 'Segui el link para generar tu password: http://localhost:4600/activateAccount?username='
+      body: 'Segui el link para generar tu password: http://localhost:4200/activar-cuenta/'
     }
   }
 ]

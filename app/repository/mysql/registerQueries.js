@@ -3,16 +3,16 @@ const registerQueries = {}
 
 const COMPANY_ROLE = { id: 1, description: 'OWNER'}
 
-registerQueries.getUserCountByUsername = (username) => {
-    return db.query(`SELECT COUNT(*) as count FROM user WHERE username = ?`, [username]);
+registerQueries.getUserCountByEmail = (email) => {
+    return db.query(`SELECT COUNT(*) as count FROM user WHERE email = ?`, [email]);
 }
 
-registerQueries.createSubscription = (name, username, invoice) => {
-    return db.query(`CALL createSubscription('${name}', '${username}', '${invoice}', ${COMPANY_ROLE.id})`);
+registerQueries.createSubscription = (name, username, email, invoice) => {
+    return db.query(`CALL createSubscription('${name}', '${email}', '${username}', '${invoice}', ${COMPANY_ROLE.id})`);
 }
 
-registerQueries.isNewUser = (username) => {
-    return db.query(`SELECT id, password FROM user WHERE username = ?`, [username]);
+registerQueries.isNewUser = (email) => {
+    return db.query(`SELECT id, password FROM user WHERE email = ?`, [email]);
 }
 
 registerQueries.activateUser = (id, password) => {
