@@ -23,7 +23,7 @@ loginController.login = (req, res) => {
         let exp = 60 * 60 * 24;
         const user_role = ROLES.getRoleById(user.role_id)
         let token = jwt.sign({id: user.id}, 'Secret Password', { expiresIn: exp })
-        res.status(200).json({user: {name: user.name, username: user.username, role: user_role, email: user.email}, token: token})
+        res.status(200).json({user: user, token: token})
     })
     .catch((error) => {
         res.status(500).json({date: moment().format(), code: 500, message: error.message})
