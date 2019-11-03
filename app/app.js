@@ -6,6 +6,7 @@ const mongoose = require('mongoose')
 const registerRouter = require('./routes/registerRouter.js')
 const authRouter = require('./routes/authRouter.js')
 const backofficeRouter = require('./routes/backofficeRouter.js')
+const userRouter = require('./routes/userRouter.js')
 
 const app = express()
 const server = http.createServer(app)
@@ -23,6 +24,7 @@ app.use(cors({origin: 'http://localhost:4200'}))
 app.use(registerRouter)
 app.use(authRouter)
 app.use(backofficeRouter)
+app.use(userRouter)
 
 server.listen(port, () => {
     console.log('Server is up on port', port)

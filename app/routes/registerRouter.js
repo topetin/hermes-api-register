@@ -11,7 +11,5 @@ router.get('', register.status)
 router.get('/is-available-user', register.isAvailableUser)
 router.post('/subscribe', register.subscribe)
 router.post('/activate-account', register.activateAccount)
-router.post('/add-user', register.addUser)
-router.post('/change-role', register.changeRole)
 
 module.exports = router
