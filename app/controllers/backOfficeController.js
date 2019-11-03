@@ -1,5 +1,5 @@
-const moment = require('moment')
 const db = require('../repository/mysql/backofficeQueries')
+const responseHandler = require('../utils/ResponseHandler')
 const emailService = require('../services/emailService')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
@@ -10,23 +10,15 @@ const backofficeController = {}
 backofficeController.getSubscription = async (req, res) => {
     const token = req.headers['authorization']
 
-    if (!token) return res.status(401).json({date: moment().format(), code: 400, message: 'Missing token'})
+    if (!token) return responseHandler.missingToken(res);
 
     const authId = await verifyToken(token)
-    .then((auth) => {
-        return auth.id
-    })
-    .catch((error) => {
-        res.status(401).json({date: moment().format(), code: 400, message: error.message});
-    })
+        .then((auth) => { return auth.id })
+        .catch((error) => responseHandler.serverError(res, error))
 
     db.getSubscription(authId)
-    .then(
-        (result) => res.status(200).json({date: moment().format(), code: 200, message: result[0]})
-    )
-    .catch(
-        (error) => res.status(500).json({date: moment().format(), code: 500, message: error.message})
-    )
+    .then((result) => responseHandler.send200(res, result[0]))
+    .catch((error) => responseHandler.serverError(res, error))
 }
 
 const verifyToken = async (token) => {    

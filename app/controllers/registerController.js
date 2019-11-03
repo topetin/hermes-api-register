@@ -3,28 +3,29 @@ const db = require('../repository/mysql/registerQueries')
 const emailService = require('../services/emailService')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const responseHandler = require('../utils/ResponseHandler')
 const mongoDb = require('../repository/mongo/mongoQueries')
 
 const registerController = {}
 
 registerController.status = (req, res) => {
-    res.status(200).json({date: moment().format(), code: 200, message: 'Register service is up'})
+    responseHandler.send200(res, 'Register service is up')
 }
 
 registerController.isAvailableUser = (req, res) => {
     const email = req.query.email
 
-    if (!email) return res.status(400).json({date: moment().format(), code: 400, message: 'Missing required parameters'})
+    if (!email) return responseHandler.missingRequiredParameters(res);
     
-    db.getUserCountByEmail(email).then((result) => {
+    db.getUserCountByEmail(email)
+    .then((result) => {
         if (result[0].count === 0) {
-            res.status(200).json({date: moment().format(), code: 200, message: 'User is available.'})
+            responseHandler.send200(res, 'User is available.')
         } else {
-            res.status(400).json({date: moment().format(), code: 400, message: 'User already registered.'})
+            responseHandler.send400(res, 'User already registered.')
         }
-    }).catch((error) => {
-        res.status(500).json({date: moment().format(), code: 500, message: error.message})
     })
+    .catch((error) => responseHandler.serverError(res, error))
 }
 
 registerController.subscribe = (req, res) => {
@@ -32,7 +33,7 @@ registerController.subscribe = (req, res) => {
     const email = req.body.email
     const invoice = req.body.invoice
 
-    if (!name || !email || !invoice) return res.status(400).json({date: moment().format(), code: 400, message: 'Missing required parameters'})
+    if (!name || !email || !invoice) return responseHandler.missingRequiredParameters(res);
 
     db.getUserCountByEmail(email)
     .then((result) => {
@@ -42,47 +43,40 @@ registerController.subscribe = (req, res) => {
             .then((result) => {
                 const rows = JSON.parse(JSON.stringify(result[0]));
                 emailService.sendEmail('subscription', rows[0].email, rows[0].user_role_id)
-                res.status(200).json({date: moment().format(), code: 200, message: email})
+                responseHandler.send200(res, email)
             })
-            .catch((error) => {
-                res.status(400).json({date: moment().format(), code: 400, message: error.message})
-            })
+            .catch((error) => responseHandler.serverError(res, error))
         } else {
-            res.status(400).json({date: moment().format(), code: 400, message: 'Username is taken.'})
+            responseHandler.send400(res, 'Username is taken.')
         }
-    }).catch((error) => {
-        res.status(500).json({date: moment().format(), code: 500, message: error.message})
     })
+    .catch((error) => responseHandler.serverError(res, error))
 }
 
 registerController.activateAccount = async (req, res) => {
     const email = req.body.email
     const password = req.body.password
 
-    if (!email || !password) return res.status(400).json({date: moment().format(), code: 400, message: 'Missing required parameters'})
+    if (!email || !password) return responseHandler.missingRequiredParameters(res);
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt)
 
     db.isNewUser(email)
     .then((result) => {
-        if (result.length === 0) return res.status(404).json({date: moment().format(), code: 404, message: 'User not found'}) 
+        if (result.length === 0) return responseHandler.send404(res, 'User not found')
         if (result[0].password === null) {
             db.activateUser(result[0].id, hashedPassword)
             .then((result) => {
-                if (result.affectedRows === 0) return res.status(404).json({date: moment().format(), code: 403, message: false})
-                return res.status(200).json({date: moment().format(), code: 200, message: true})
+                if (result.affectedRows === 0) return responseHandler.send403(res, false)
+                return responseHandler.send200(res, true)
             })
-            .catch((error) => {
-                res.status(500).json({date: moment().format(), code: 500, message: error.message})
-            })
+            .catch((error) => responseHandler.serverError(res, error))
         } else {
-            res.status(403).json({date: moment().format(), code: 403, message: 'Account is already active'})
+            responseHandler.send403(res, 'Account is already active')
         }
     })
-    .catch((error) => {
-        res.status(500).json({date: moment().format(), code: 500, message: error.message})
-    })
+    .catch((error) =>  responseHandler.serverError(res, error))
 }
 
 // registerController.addUser = async (req, res) => {

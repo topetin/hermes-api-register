@@ -1,5 +1,5 @@
-const moment = require('moment')
 const db = require('../repository/mysql/userQueries')
+const responseHandler = require('../utils/ResponseHandler')
 const emailService = require('../services/emailService')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
@@ -9,56 +9,41 @@ const userController = {}
 userController.changeProfilePicture = async (req, res) => {
     const token = req.headers['authorization']
 
-    if (!token) return res.status(401).json({ date: moment().format(), code: 400, message: 'Missing token' })
+    if (!token) return responseHandler.missingToken(res);
 
     const authId = await verifyToken(token)
-        .then((auth) => {
-            return auth.id
-        })
-        .catch((error) => {
-            res.status(401).json({ date: moment().format(), code: 400, message: error.message });
-        })
+        .then((auth) => { return auth.id })
+        .catch((error) => responseHandler.serverError(res, error))
 
     const profile_img = req.body.profile_img
+    if (!profile_img) return responseHandler.missingRequiredParameters(res)
 
     db.changeProfileImg(authId, profile_img)
-        .then(
-            (result) => {
+        .then((result) => {
                 db.getUser(authId)
                     .then(
-                        (data) => {
-                            res.status(200).json({ date: moment().format(), code: 200, message: data[0] })
-                        }
-                    )
-                    .catch(
-                        (error) => res.status(500).json({ date: moment().format(), code: 500, message: error.message })
-                    )
+                        (data) => responseHandler.send200(res, data[0]))
+                    .catch((error) => responseHandler.serverError(res, error))
             }
         )
-        .catch(
-            (error) => res.status(500).json({ date: moment().format(), code: 500, message: error.message })
-        )
+        .catch((error) => responseHandler.serverError(res, error))
 
 }
 
 userController.changePassword = async (req, res) => {
     const token = req.headers['authorization']
 
-    if (!token) return res.status(401).json({ date: moment().format(), code: 400, message: 'Missing token' })
+    if (!token) return responseHandler.missingToken(res);
 
     const authId = await verifyToken(token)
-        .then((auth) => {
-            return auth.id
-        })
-        .catch((error) => {
-            res.status(401).json({ date: moment().format(), code: 400, message: error.message });
-        })
+        .then((auth) => { return auth.id })
+        .catch((error) => responseHandler.serverError(res, error))
 
     const password_current = req.body.password_current
     const password_new = req.body.password_new
 
-    if (password_current === password_new) return res.status(400).json({date: moment().format(), code: 400, message: 'Current and new password cant be the same'})
-    if (!password_current || !password_new) return res.status(400).json({date: moment().format(), code: 400, message: 'Missing required parameters'})
+    if (password_current === password_new) return responseHandler.send400(res, 'Current and new password cant be the same')
+    if (!password_current || !password_new) return responseHandler.missingRequiredParameters(res);
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password_new, salt)
@@ -67,24 +52,27 @@ userController.changePassword = async (req, res) => {
     .then(
         async(result) => {
             const validPassword = await bcrypt.compare(password_current, result[0].password);
-            if (!validPassword) {
-                return res.status(400).json({date: moment().format(), code: 400, message: 'Current password is not correct.'})
-            }
+            if (!validPassword) return responseHandler.send400(res, 'Current password is not correct.')
             db.updatePassword(authId, hashedPassword)
-            .then(
-                (result) => res.status(200).json({date: moment().format(), code: 200, message: true})
-            )
-            .catch(
-                (error) => res.status(500).json({ date: moment().format(), code: 500, message: error.message })
-            )
+            .then((result) => responseHandler.send200(res, true))
+            .catch((error) => responseHandler.serverError(res, error))
         }
     )
-    .catch(
-        (error) => res.status(500).json({ date: moment().format(), code: 500, message: error.message })
-    )
+    .catch(responseHandler.serverError(res, error))
 }
 
-userController.changeName = (req, res) => {
+userController.changeName = async (req, res) => {
+    const token = req.headers['authorization']
+
+    if (!token) return responseHandler.missingToken(res);
+
+    const authId = await verifyToken(token)
+        .then((auth) => { return auth.id })
+        .catch((error) => responseHandler.serverError(res, error))
+    
+    const name_new = req.body.name_new
+
+    if (!name_new) return responseHandler.missingRequiredParameters(res);
 
 }
 
