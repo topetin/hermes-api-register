@@ -18,4 +18,8 @@ userQueries.updatePassword = (id, newPass) => {
     return db.query(`UPDATE user SET password = ? WHERE id = ?`, [newPass, id]);
 }
 
+userQueries.changeName = (id, newName) => {
+    return db.query(`UPDATE user SET name = ? WHERE id = ?`, [newName, id]);
+}
+
 module.exports = userQueries

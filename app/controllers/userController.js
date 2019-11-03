@@ -58,7 +58,7 @@ userController.changePassword = async (req, res) => {
             .catch((error) => responseHandler.serverError(res, error))
         }
     )
-    .catch(responseHandler.serverError(res, error))
+    .catch((error) => responseHandler.serverError(res, error))
 }
 
 userController.changeName = async (req, res) => {
@@ -74,6 +74,14 @@ userController.changeName = async (req, res) => {
 
     if (!name_new) return responseHandler.missingRequiredParameters(res);
 
+    db.changeName(authId, name_new)
+    .then((result) => {
+        db.getUser(authId)
+        .then(
+            (data) => responseHandler.send200(res, data[0]))
+        .catch((error) => responseHandler.serverError(res, error))
+    })
+    .catch((error) => responseHandler.serverError(error))
 }
 
 const verifyToken = async (token) => {
