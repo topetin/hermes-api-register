@@ -8,7 +8,7 @@ router.use(bodyParser.json())
 router.use(bodyParser.urlencoded({extended: true}))
 
 router.get('/subscription', backoffice.getSubscription)
-// router.get('/list-users', backoffice.listUsers)
+router.get('/list-users', backoffice.listUsers)
 // router.get('/is-available-user', backoffice.isAvailableUser)
 // router.post('/add-user', backoffice.addUser)
 // router.post('/modify-user', backoffice.modifyUser)
