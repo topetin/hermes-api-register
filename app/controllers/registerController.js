@@ -79,34 +79,6 @@ registerController.activateAccount = async (req, res) => {
     .catch((error) =>  responseHandler.serverError(res, error))
 }
 
-// registerController.addUser = async (req, res) => {
-//     const token = req.headers['authorization']
-
-//     if (!token) return res.status(401).json({date: moment().format(), code: 400, message: 'Missing token'})
-
-//     const auth = await verifyToken(token)
-//     .then((auth) => {
-//         return auth.username
-//     })
-//     .catch((error) => {
-//         res.status(401).json({date: moment().format(), code: 400, message: error.message});
-//     })
-
-//     let added = [];
-//     let notAdded = [];
-
-//     req.body.forEach(element => {
-//         if (!element.name || !element.username || !element.role) 
-//             return notAdded.push({ element: element, cause: 'Missing required parameters' })
-//         db.getUserCountByUsername(element.username)
-//         .then((result) => {
-//             if (result[0].count !== 0) 
-//                 return notAdded.push({ element: element, cause: 'Username taken' })
-//             db.addUser
-//         })
-//     });
-// }
-
 const verifyToken = async (token) => {    
     token = token.replace('Bearer ', '')
     return new Promise((resolve, reject) => {

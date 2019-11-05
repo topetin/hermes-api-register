@@ -78,6 +78,52 @@ backofficeController.addUsers = async (req, res) => {
     .catch((error) => responseHandler.serverError(res, error))
 }
 
+backofficeController.deleteUser = async (req, res) => {
+    const token = req.headers['authorization']
+
+    if (!token) return responseHandler.missingToken(res);
+
+    const authId = await verifyToken(token)
+        .then((auth) => { return auth.id })
+        .catch((error) => responseHandler.serverError(res, error))
+    
+    const users = req.body.users;
+
+    let emailList = [];
+    for (let i = 0; i< users.length; i++) {
+        let obj = Object.assign({}, users[i]);
+        emailList.push(obj.email);
+    }
+
+    db.deleteUsers(emailList, authId)
+    .then((result) => responseHandler.send200(res, true))
+    .catch((error) => responseHandler.serverError(res, error))
+}
+
+
+backofficeController.modifyRole = async (req, res) => {
+    const token = req.headers['authorization']
+
+    if (!token) return responseHandler.missingToken(res);
+
+    const authId = await verifyToken(token)
+        .then((auth) => { return auth.id })
+        .catch((error) => responseHandler.serverError(res, error))
+    
+    const users = req.body.users;
+    const role = req.body.role;
+
+    let emailList = [];
+    for (let i = 0; i< users.length; i++) {
+        let obj = Object.assign({}, users[i]);
+        emailList.push(obj.email);
+    }
+
+    db.modifyRole(emailList, role, authId)
+    .then((result) => responseHandler.send200(res, true))
+    .catch((error) => responseHandler.serverError(res, error))
+}
+
 const verifyToken = async (token) => {    
     token = token.replace('Bearer ', '')
     return new Promise((resolve, reject) => {
