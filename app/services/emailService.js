@@ -9,6 +9,13 @@ const EMAIL_DEF = [
       subject: 'Gracias por suscribirte!',
       body: 'Segui el link para generar tu password: http://localhost:4200/activar-cuenta/'
     }
+  },
+  {
+    id: 2,
+    'addedUser': {
+      subject: 'Tu organizacion te inivito a Hermes!',
+      body: 'Segui el link para generar tu password: http://localhost:4200/activar-cuenta/'
+    }
   }
 ]
 

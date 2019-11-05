@@ -52,6 +52,8 @@ backofficeController.addUsers = async (req, res) => {
         emailList.push(obj.email);
     }
     
+    let values = []
+
     db.isAvailableEmail(emailList)
     .then((result) => {
         if (result.length > 0) {
@@ -62,7 +64,6 @@ backofficeController.addUsers = async (req, res) => {
             }
             return responseHandler.send403(res, existentEmails)
         }
-        let values = []
         for (let i = 0; i < users.length; i++) {
             let obj = Object.assign({}, users[i]);
             let reg = []
@@ -72,8 +73,13 @@ backofficeController.addUsers = async (req, res) => {
             values.push(reg)
         }
         db.addUsers(values)
-        .then((result2) => responseHandler.send200(res, true))
-        .catch((error2) => responseHandler.serverError(res, error))
+        .then((result2) => {
+            for (let i = 0; i < emailList.length; i++) {
+                emailService.sendEmail('addedUser', emailList[i], 2)
+            }
+            responseHandler.send200(res, true)
+        })
+        .catch((error2) => responseHandler.serverError(res, error2))
     })
     .catch((error) => responseHandler.serverError(res, error))
 }
@@ -111,7 +117,6 @@ backofficeController.modifyRole = async (req, res) => {
         .catch((error) => responseHandler.serverError(res, error))
     
     const users = req.body.users;
-    const role = req.body.role;
 
     let emailList = [];
     for (let i = 0; i< users.length; i++) {
@@ -119,9 +124,37 @@ backofficeController.modifyRole = async (req, res) => {
         emailList.push(obj.email);
     }
 
-    db.modifyRole(emailList, role, authId)
+    db.resendInvitations(emailList, role, authId)
     .then((result) => responseHandler.send200(res, true))
     .catch((error) => responseHandler.serverError(res, error))
+
+}
+
+backofficeController.resendInvitations = async (req, res) => {
+    const token = req.headers['authorization']
+
+    if (!token) return responseHandler.missingToken(res);
+
+    const authId = await verifyToken(token)
+        .then((auth) => { return auth.id })
+        .catch((error) => responseHandler.serverError(res, error))
+    
+    const users = req.body.users;
+
+    let emailList = [];
+    for (let i = 0; i< users.length; i++) {
+        let obj = Object.assign({}, users[i]);
+        emailList.push(obj.email);
+    }
+
+    try {
+        for (let i = 0; i < emailList.length; i++) {
+            emailService.sendEmail('addedUser', emailList[i], 2)
+        }
+        responseHandler.send200(res, true)
+    } catch (e) {
+        responseHandler.serverError(res, error)
+    }
 }
 
 const verifyToken = async (token) => {    

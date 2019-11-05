@@ -12,7 +12,6 @@ router.get('/list-users', backoffice.listUsers)
 router.post('/add-users', backoffice.addUsers)
 router.post('/delete-users', backoffice.deleteUser)
 router.post('/modify-role', backoffice.modifyRole)
-
-// router.post('/resend-invitation', backoffice.resendInvitation)
+router.post('/resend-invitations', backoffice.resendInvitations)
 
 module.exports = router
