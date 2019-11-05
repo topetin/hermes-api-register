@@ -6,6 +6,21 @@ const jwt = require('jsonwebtoken')
 
 const userController = {}
 
+userController.getUser = async (req, res) => {
+    const token = req.headers['authorization']
+
+    if (!token) return responseHandler.missingToken(res);
+
+    const authId = await verifyToken(token)
+        .then((auth) => { return auth.id })
+        .catch((error) => responseHandler.serverError(res, error))
+    
+    db.getUser(authId)
+    .then((result) => responseHandler.send200(res, result[0]))
+    .catch((error) => responseHandler.serverError(res, error))
+
+}
+
 userController.changeProfilePicture = async (req, res) => {
     const token = req.headers['authorization']
 
