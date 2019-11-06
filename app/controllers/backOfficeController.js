@@ -1,9 +1,7 @@
 const db = require('../repository/mysql/backofficeQueries')
 const responseHandler = require('../utils/ResponseHandler')
 const emailService = require('../services/emailService')
-const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const mongoDb = require('../repository/mongo/mongoQueries')
 
 const backofficeController = {}
 

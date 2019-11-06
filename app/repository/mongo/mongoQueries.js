@@ -1,1 +1,0 @@
-const sessionStorage = require('./sessionStorageModel')

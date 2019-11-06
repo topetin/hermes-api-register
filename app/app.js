@@ -7,6 +7,7 @@ const registerRouter = require('./routes/registerRouter.js')
 const authRouter = require('./routes/authRouter.js')
 const backofficeRouter = require('./routes/backofficeRouter.js')
 const userRouter = require('./routes/userRouter.js')
+const feedRouter = require('./routes/feedRouter.js')
 
 const app = express()
 const server = http.createServer(app)
@@ -25,6 +26,7 @@ app.use(registerRouter)
 app.use(authRouter)
 app.use(backofficeRouter)
 app.use(userRouter)
+app.use(feedRouter)
 
 server.listen(port, () => {
     console.log('Server is up on port', port)

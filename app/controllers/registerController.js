@@ -1,10 +1,8 @@
-const moment = require('moment')
 const db = require('../repository/mysql/registerQueries')
 const emailService = require('../services/emailService')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const responseHandler = require('../utils/ResponseHandler')
-const mongoDb = require('../repository/mongo/mongoQueries')
 
 const registerController = {}
 
