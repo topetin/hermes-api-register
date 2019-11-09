@@ -10,6 +10,10 @@ userQueries.getUser = (id) => {
     return db.query(`SELECT * from user WHERE id = ?`, [id]);
 }
 
+userQueries.getCompanyByUser = (id) => {
+    return db.query(`SELECT u2.* from user u join user u2 on u.company_id = u2.id WHERE u.id = ?`, [id]);
+}
+
 userQueries.getPassword = (id) => {
     return db.query(`SELECT password from user WHERE id = ?`, [id]);
 }

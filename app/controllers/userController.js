@@ -109,11 +109,11 @@ userController.getCompanyFeed = async (req, res) => {
         .catch((error) => responseHandler.serverError(res, error))
 
         try {
-            db.getUser(authId)
+            db.getCompanyByUser(authId)
             .then(async (result) => {
-                const feeds = await Feed.find({ company_id: result[0].company_id })
+                const feeds = await Feed.find({ company_id: result[0].id })
                 res.setHeader("Content-Type", "application/json; charset=utf-8");
-                responseHandler.send200(res, {feeds: feeds, company: {id: result[0].company_id, profile_img: result[0].profile_img}})
+                responseHandler.send200(res, {feeds: feeds, company: {id: result[0].id, profile_img: result[0].profile_img, name: result[0].name}})
             })
             .catch((error) => responseHandler.serverError(res, error))
         }
