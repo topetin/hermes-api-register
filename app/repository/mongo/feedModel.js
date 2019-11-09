@@ -5,6 +5,10 @@ const feedSchema = new mongoose.Schema({
     type: Number,
     required: [true, 'CompanyId is required']
   },
+  profile_img: {
+    type: Number,
+    required: [true, 'Profile_img is required']
+  },
   message: {
     type: String,
     required: [true, 'Message is required']

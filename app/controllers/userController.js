@@ -1,6 +1,6 @@
 const db = require('../repository/mysql/userQueries')
 const responseHandler = require('../utils/ResponseHandler')
-const emailService = require('../services/emailService')
+const Feed = require('../repository/mongo/feedModel')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 
@@ -97,6 +97,29 @@ userController.changeName = async (req, res) => {
         .catch((error) => responseHandler.serverError(res, error))
     })
     .catch((error) => responseHandler.serverError(error))
+}
+
+userController.getCompanyFeed = async (req, res) => {
+    const token = req.headers['authorization']
+
+    if (!token) return responseHandler.missingToken(res);
+
+    const authId = await verifyToken(token)
+        .then((auth) => { return auth.id })
+        .catch((error) => responseHandler.serverError(res, error))
+
+        try {
+            db.getUser(authId)
+            .then(async (result) => {
+                const feeds = await Feed.find({ company_id: result[0].company_id })
+                res.setHeader("Content-Type", "application/json; charset=utf-8");
+                responseHandler.send200(res, {feeds: feeds, company: {id: result[0].company_id, profile_img: result[0].profile_img}})
+            })
+            .catch((error) => responseHandler.serverError(res, error))
+        }
+        catch(e) {
+            responseHandler.serverError(res, e)
+        }
 }
 
 const verifyToken = async (token) => {

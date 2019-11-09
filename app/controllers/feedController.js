@@ -1,10 +1,7 @@
 const Feed = require('../repository/mongo/feedModel')
 const responseHandler = require('../utils/ResponseHandler')
 const moment = require('moment')
-const emailService = require('../services/emailService')
-const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const mongoDb = require('../repository/mongo/feedQueries')
 
 const feedController = {}
 
