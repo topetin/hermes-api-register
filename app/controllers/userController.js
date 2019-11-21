@@ -122,6 +122,29 @@ userController.getCompanyFeed = async (req, res) => {
         }
 }
 
+userController.getCompanyUsers = async (req, res) => {
+    const token = req.headers['authorization']
+
+    if (!token) return responseHandler.missingToken(res);
+
+    const authId = await verifyToken(token)
+        .then((auth) => { return auth.id })
+        .catch((error) => responseHandler.serverError(res, error))
+
+    try {
+        db.getCompanyByUser(authId)
+        .then((result) => {
+            db.listUsers(result[0].id, authId)    
+            .then((result) => responseHandler.send200(res, result.length === 0 ? [] : result))
+            .catch((error) => responseHandler.serverError(res, error))
+        })
+        .catch((error) => responseHandler.serverError(res, error))
+    }
+    catch(e) {
+        responseHandler.serverError(res, e)
+    }
+}
+
 const verifyToken = async (token) => {
     token = token.replace('Bearer ', '')
     return new Promise((resolve, reject) => {

@@ -26,4 +26,8 @@ userQueries.changeName = (id, newName) => {
     return db.query(`UPDATE user SET name = ? WHERE id = ?`, [newName, id]);
 }
 
+userQueries.listUsers = (companyId, userId) => {
+    return db.query(`SELECT * FROM user WHERE company_id = ? and company_id <> id and id <> ? and active = 1 ORDER BY name desc`, [companyId, userId]);
+}
+
 module.exports = userQueries
