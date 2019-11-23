@@ -8,5 +8,6 @@ router.use(bodyParser.json())
 router.use(bodyParser.urlencoded({extended: true}))
 
 router.post('/create-channel', channel.createChannel)
+router.get('/get-channels', channel.getChannels)
 
 module.exports = router

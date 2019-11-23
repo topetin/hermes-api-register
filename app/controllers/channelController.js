@@ -20,15 +20,31 @@ channelController.createChannel = async (req, res) => {
 
     if (!type || !title || !members) return responseHandler.missingRequiredParameters(res)
 
+    let membersToAdd = []
+
     db.createChannel(authId, type, title)
     .then((result) => {
-        members.map(id => {
-            db.addUserToChannel(id, result.insertId)
+        members.map(id => membersToAdd.push([id, result.insertId]))
+        db.addUserToChannel(membersToAdd)
             .then((result) => responseHandler.send200(res, result.insertId))
             .catch((error => responseHandler.serverError(res, error)));
-        })
+
     })
     .catch((error => responseHandler.serverError(res, error)));
+}
+
+channelController.getChannels = async (req, res) => {
+    const token = req.headers['authorization']
+
+    if (!token) return responseHandler.missingToken(res);
+
+    const authId = await verifyToken(token)
+        .then((auth) => { return auth.id })
+        .catch((error) => responseHandler.serverError(res, error))
+
+    db.listChannels(authId)
+        .then((result) => responseHandler.send200(res, result.length === 0 ? [] : result))
+        .catch((error => responseHandler.serverError(res, error)));
 }
 
 const verifyToken = async (token) => {
