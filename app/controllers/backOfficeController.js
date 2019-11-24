@@ -73,7 +73,7 @@ backofficeController.addUsers = async (req, res) => {
         db.addUsers(values)
         .then((result2) => {
             for (let i = 0; i < emailList.length; i++) {
-                emailService.sendEmail('addedUser', emailList[i], 2)
+                // emailService.sendEmail('addedUser', emailList[i], 2)
             }
             responseHandler.send200(res, true)
         })

@@ -21,12 +21,14 @@ channelController.createChannel = async (req, res) => {
     if (!type || !title || !members) return responseHandler.missingRequiredParameters(res)
 
     let membersToAdd = []
-
+    
     db.createChannel(authId, type, title)
     .then((result) => {
         members.map(id => membersToAdd.push([id, result.insertId]))
         db.addUserToChannel(membersToAdd)
-            .then((result) => responseHandler.send200(res, result.insertId))
+            .then((result2) => {
+                responseHandler.send200(res, {id: result.insertId, owner_id: authId, type: type, title: title})
+            })
             .catch((error => responseHandler.serverError(res, error)));
 
     })

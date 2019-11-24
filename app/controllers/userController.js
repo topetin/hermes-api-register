@@ -145,6 +145,43 @@ userController.getCompanyUsers = async (req, res) => {
     }
 }
 
+userController.search = async (req, res) => {
+    const token = req.headers['authorization']
+
+    if (!token) return responseHandler.missingToken(res);
+
+    const authId = await verifyToken(token)
+        .then((auth) => { return auth.id })
+        .catch((error) => responseHandler.serverError(res, error))
+    
+    const searchString = req.query.searchString
+    const users = []
+    const channels = []
+
+    try {
+        db.getCompanyByUser(authId)
+        .then((result) => {            
+            db.getUserByString(result[0].id, authId, searchString)    
+            .then((result) => 
+            {
+                result.length === 0 ? null : users.push(result)
+                db.getChannelByString(authId, searchString)
+                .then((result2) => {
+                    result2.length === 0 ? null : channels.push(result2)
+                    responseHandler.send200(res, {users: users.length > 0 ? users[0] : [], channels: channels.length > 0 ? channels[0] : []})
+                })
+                .catch((error) => responseHandler.serverError(res, error))
+            })
+            .catch((error) => responseHandler.serverError(res, error))
+            
+        })
+        .catch((error) => responseHandler.serverError(res, error))
+    }
+    catch(e) {
+        responseHandler.serverError(res, e)
+    }
+}
+
 const verifyToken = async (token) => {
     token = token.replace('Bearer ', '')
     return new Promise((resolve, reject) => {

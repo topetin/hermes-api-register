@@ -10,7 +10,7 @@ channelQueries.addUserToChannel = (values) => {
 }
 
 channelQueries.listChannels = (userId) => {
-    return db.query(`SELECT DISTINCT c.* FROM channel c INNER JOIN user_channel uc ON c.id = uc.channel_id WHERE c.owner_id = ? and uc.user_id ORDER BY c.title`, [userId]);
+    return db.query(`SELECT DISTINCT c.* FROM channel c INNER JOIN user_channel uc ON c.id = uc.channel_id WHERE (c.owner_id = ${userId} or uc.user_id = ${userId}) ORDER BY c.title`);
 }
 
 module.exports = channelQueries
