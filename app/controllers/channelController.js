@@ -1,4 +1,5 @@
 const db = require('../repository/mysql/channelQueries')
+const userQueries = require('../repository/mysql/userQueries')
 const responseHandler = require('../utils/ResponseHandler')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
@@ -21,16 +22,23 @@ channelController.createChannel = async (req, res) => {
     if (!type || !title || !members) return responseHandler.missingRequiredParameters(res)
 
     let membersToAdd = []
-    
-    db.createChannel(authId, type, title)
-    .then((result) => {
-        members.map(id => membersToAdd.push([id, result.insertId]))
-        db.addUserToChannel(membersToAdd)
-            .then((result2) => {
-                responseHandler.send200(res, {id: result.insertId, owner_id: authId, type: type, title: title})
-            })
-            .catch((error => responseHandler.serverError(res, error)));
 
+    userQueries.getUser(authId)
+    .then((result) => {
+        if (result[0].role_id !== 2) {
+            return responseHandler.send403(res, 'You must be and ADMINISTRATOR to create a new channel')
+        }
+        db.createChannel(authId, type, title)
+        .then((result) => {
+            members.map(id => membersToAdd.push([id, result.insertId]))
+            db.addUserToChannel(membersToAdd)
+                .then((result2) => {
+                    responseHandler.send200(res, {id: result.insertId, owner_id: authId, type: type, title: title})
+                })
+                .catch((error => responseHandler.serverError(res, error)));
+    
+        })
+        .catch((error => responseHandler.serverError(res, error)));
     })
     .catch((error => responseHandler.serverError(res, error)));
 }
@@ -47,6 +55,152 @@ channelController.getChannels = async (req, res) => {
     db.listChannels(authId)
         .then((result) => responseHandler.send200(res, result.length === 0 ? [] : result))
         .catch((error => responseHandler.serverError(res, error)));
+}
+
+channelController.getChannelInfo = async(req, res) => {
+    const token = req.headers['authorization']
+
+    if (!token) return responseHandler.missingToken(res);
+
+    const authId = await verifyToken(token)
+        .then((auth) => { return auth.id })
+        .catch((error) => responseHandler.serverError(res, error))
+
+    const channelId = req.query.channelId;
+
+    const channelInfo = []
+
+    db.getChannelMemebersInfo(channelId)
+    .then((result) => {
+        if (result.length !== 0) {
+            result.map((item) => {
+                let o = Object.assign({}, item);
+                o.role_in_channel = 'member'
+                channelInfo.push(o);
+            })
+        }
+        db.getChannelOwnerInfo(channelId)
+        .then((result2) => {
+            if (result2.length !== 0) {
+                result2.map((item) => {
+                    let f = Object.assign({}, item);
+                    f.role_in_channel = 'owner'
+                    channelInfo.push(f);
+                })
+            }
+            responseHandler.send200(res, channelInfo.length === 0 ? [] : channelInfo)
+        })
+        .catch((error) => responseHandler.serverError(res, error))
+        
+    })
+    .catch((error) => responseHandler.serverError(res, error))
+}
+
+channelController.removeMember = async(req, res) => {
+    const token = req.headers['authorization']
+
+    if (!token) return responseHandler.missingToken(res);
+
+    const authId = await verifyToken(token)
+        .then((auth) => { return auth.id })
+        .catch((error) => responseHandler.serverError(res, error))
+
+    const memberId = req.body.userId;
+    const channelId = req.body.channelId;
+
+    userQueries.getUser(authId)
+    .then((result) => {
+        if (result[0].role_id !== 2) {
+            return responseHandler.send403(res, 'You must be and ADMINISTRATOR to create a new channel')
+        }
+    db.removeUserFromChannel(memberId, channelId)
+    .then((result) => responseHandler.send200(res, true))
+    .catch((error) => responseHandler.serverError(res, error))
+})
+.catch((error => responseHandler.serverError(res, error)));
+}
+
+channelController.removeChannel = async(req, res) => {
+    const token = req.headers['authorization']
+
+    if (!token) return responseHandler.missingToken(res);
+
+    const authId = await verifyToken(token)
+        .then((auth) => { return auth.id })
+        .catch((error) => responseHandler.serverError(res, error))
+    
+    const channelId = req.body.channelId;
+
+    userQueries.getUser(authId)
+    .then((result) => {
+        if (result[0].role_id !== 2) {
+            return responseHandler.send403(res, 'You must be and ADMINISTRATOR to create a new channel')
+        }
+        db.removeChannelById(channelId)
+        .then((result) => {
+            db.removeChannelById2(channelId)
+            .then((result) => responseHandler.send200(res, true))
+            .catch((error) => responseHandler.serverError(res, error))
+        })
+        .catch((error) => responseHandler.serverError(res, error))
+    })
+    .catch((error => responseHandler.serverError(res, error)));
+}
+
+channelController.addMember = async(req, res) => {
+    const token = req.headers['authorization']
+
+    if (!token) return responseHandler.missingToken(res);
+
+    const authId = await verifyToken(token)
+        .then((auth) => { return auth.id })
+        .catch((error) => responseHandler.serverError(res, error))
+    
+    const channelId = req.body.channelId;
+    const memberId = req.body.userId;
+
+    userQueries.getUser(authId)
+    .then((result) => {
+        if (result[0].role_id !== 2) {
+            return responseHandler.send403(res, 'You must be and ADMINISTRATOR to create a new channel')
+        }
+        db.addUserToChannel([[memberId, channelId]])
+        .then((result2) => responseHandler.send200(res, true))
+        .catch((error) => responseHandler.serverError(res, error))
+    })
+    .catch((error => responseHandler.serverError(res, error)));
+}
+
+channelController.removeSingleChannel = async(req, res) => {
+    const token = req.headers['authorization']
+
+    if (!token) return responseHandler.missingToken(res);
+
+    const authId = await verifyToken(token)
+        .then((auth) => { return auth.id })
+        .catch((error) => responseHandler.serverError(res, error))
+    
+    const channelId = req.body.channelId;
+    const channelOwner = req.body.channelOwner;
+    const channelMember = req.body.channelMember;
+    const userId = req.body.userId;
+
+    if (channelOwner === userId) {
+        db.removeChannelById(channelId)
+        .then((result) => {
+            db.updateChannelOwner(channelId, channelMember)
+            .then((result2) => responseHandler.send200(res, true))
+            .catch((error) => responseHandler.serverError(res, error))
+        })
+        .catch((error) => responseHandler.serverError(res, error))
+    }
+
+    if (channelOwner !== userId) {
+        db.removeChannelById(channelId)
+        .then((result) => responseHandler.send200(res, true))
+        .catch((error) => responseHandler.serverError(res, error))
+    }
+
 }
 
 const verifyToken = async (token) => {

@@ -1,6 +1,7 @@
 const db = require('../repository/mysql/backofficeQueries')
 const responseHandler = require('../utils/ResponseHandler')
 const emailService = require('../services/emailService')
+const roles = require('../data/Roles')
 const jwt = require('jsonwebtoken')
 
 const backofficeController = {}
@@ -115,6 +116,7 @@ backofficeController.modifyRole = async (req, res) => {
         .catch((error) => responseHandler.serverError(res, error))
     
     const users = req.body.users;
+    const role = req.body.role;
 
     let emailList = [];
     for (let i = 0; i< users.length; i++) {
@@ -122,7 +124,7 @@ backofficeController.modifyRole = async (req, res) => {
         emailList.push(obj.email);
     }
 
-    db.resendInvitations(emailList, role, authId)
+    db.modifyRole(emailList, role, authId)
     .then((result) => responseHandler.send200(res, true))
     .catch((error) => responseHandler.serverError(res, error))
 
