@@ -14,5 +14,6 @@ router.post('/remove-member', channel.removeMember)
 router.post('/remove-channel', channel.removeChannel)
 router.post('/add-member', channel.addMember)
 router.post('/remove-single-channel', channel.removeSingleChannel)
+router.get('/get-app-state', channel.getAppState)
 
 module.exports = router

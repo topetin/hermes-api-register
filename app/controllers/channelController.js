@@ -1,7 +1,7 @@
 const db = require('../repository/mysql/channelQueries')
 const userQueries = require('../repository/mysql/userQueries')
 const responseHandler = require('../utils/ResponseHandler')
-const bcrypt = require('bcrypt')
+const State = require('../repository/mongo/AppStateModel')
 const jwt = require('jsonwebtoken')
 
 const channelController = {}
@@ -201,6 +201,27 @@ channelController.removeSingleChannel = async(req, res) => {
         .catch((error) => responseHandler.serverError(res, error))
     }
 
+}
+
+channelController.getAppState = async(req, res) => {
+    const token = req.headers['authorization']
+
+    if (!token) return responseHandler.missingToken(res);
+
+    const authId = await verifyToken(token)
+        .then((auth) => { return auth.id })
+        .catch((error) => responseHandler.serverError(res, error))
+
+    const companyId = req.query.companyId
+
+    try {
+        const state = await State.find({companyId: companyId})
+        res.setHeader("Content-Type", "application/json; charset=utf-8");
+        responseHandler.send200(res, state)
+    }
+    catch(e) {
+        responseHandler.serverError(res, e)
+    }
 }
 
 const verifyToken = async (token) => {
