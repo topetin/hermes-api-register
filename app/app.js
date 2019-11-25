@@ -21,29 +21,33 @@ const chattApp = io.of('/app');
 
 chattApp.on('connection', (socket) => {
 
+    console.log('a user connected');
+
     socket.on('emit-online', async (data) => {
         socket.user = data.userId
-        socket.company = data.companyId
+        const companyId = 'company' + data.companyId;
+        socket.company = companyId
+        socket.join(companyId)
 
-        socket.join(data.companyId)
-
-        findAndSaveState(data.companyId, data.userId, socket.id)
-        .then((result) => io.of('/app').to(data.companyId).emit('on-online', {user: data.userId, socketId: socket.id}))
+        findAndSaveState(companyId, data.userId, socket.id)
+        .then((result) => io.of('/app').to(companyId).emit('on-online', {userId: data.userId, socketId: socket.id}))
         .catch((error) => console.log(error))
     })
 
-    console.log('a user connected');
+    socket.on('emit-join', (data) => {
+        data.channels.map((channel) => {
+            socket.join(channel)
+            io.of('/app').to(channel).emit('on-join', {channel: channel, user: socket.user})
+        })
+    })
 
-    // socket.on('join', (joinData) => {
-    //     socket.user = joinData.user
-    //     socket.channel = joinData.channel
-    //     socket.join(joinData.channel)
-    //     io.of('/app').to(joinData.channel).emit('new-member', {channel: joinData.channel, user: joinData.user})
-    // })
+    socket.on('emit-message-from-new-channel', (data) => {
+        io.of('/app').to(data.socketId).emit('on-message-from-new-channel', data.channel)
+    })
 
-    // socket.on('new-message', (data) => {
-    //     io.of('/quickRoom').to(data.room).emit('new-message', data.message)
-    // })
+    socket.on('emit-message', (data) => {
+        io.of('/app').to(data.channel.id).emit('on-message', data)
+    })
 
     // socket.on('typing', (data) => {
     //     if (data.user === false) {
@@ -55,8 +59,10 @@ chattApp.on('connection', (socket) => {
     // })
 
     socket.on('disconnect', function(){
-        deleteState(socket.company, socket.user)
-        .then((result) => io.of('/app').to(socket.room).emit('on-offline', {user: socket.user}))
+        deleteState(socket.company, socket.user, socket.id)
+        .then((result) => {
+            io.of('/app').to(socket.company).emit('on-offline', {user: socket.user})
+        })
         .catch((error) => console.log(error))
         console.log('user disconnected')
     })
@@ -100,9 +106,9 @@ const findAndSaveState = async (companyId, userId, socketId) => {
     })
 }
 
-const deleteState = async (companyId, userId) => {
+const deleteState = async (companyId, userId, socketId) => {
     return new Promise((resolve, reject) => {
-        State.deleteMany({ companyId: companyId, userId: userId }, function (error, res) {
+        State.deleteOne({ companyId: companyId, userId: userId, socketId: socketId }, function (error, res) {
             if (error) {
                 reject(error)
             } else {

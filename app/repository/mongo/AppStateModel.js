@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 
 const AppStateSchema = new mongoose.Schema({
   companyId: {
-    type: Number,
+    type: String,
     required: [true, 'CompanyId is required']
   },
   userId: {

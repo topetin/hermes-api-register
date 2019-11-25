@@ -10,7 +10,7 @@ channelQueries.addUserToChannel = (values) => {
 }
 
 channelQueries.listChannels = (userId) => {
-    return db.query(`SELECT DISTINCT c.* FROM channel c INNER JOIN user_channel uc ON c.id = uc.channel_id WHERE (c.owner_id = ${userId} or uc.user_id = ${userId}) ORDER BY c.title`);
+    return db.query(`SELECT distinct(c.id) as id, c.owner_id, c.type, c.title FROM channel c LEFT JOIN user_channel uc ON c.id = uc.channel_id WHERE (c.owner_id = ${userId} or uc.user_id = ${userId}) ORDER BY c.title`);
 }
 
 channelQueries.getChannelMemebersInfo = (channelID) => {
@@ -32,18 +32,18 @@ channelQueries.removeUserFromChannel = (memberId, channelId) => {
     return db.query(`DELETE FROM user_channel WHERE user_id = ? AND channel_id = ?`, [memberId, channelId]);
 }
 
-channelQueries.removeChannelById = (channelId) => {
+channelQueries.removeUserChannelById = (channelId) => {
     console.log(`DELETE FROM user_channel WHERE channel_id = ${channelId}`)
     return db.query(`DELETE FROM user_channel WHERE channel_id = ${channelId}`);
 }
 
-channelQueries.removeChannelById2 = (channelId) => {
+channelQueries.removeChannelById = (channelId) => {
     console.log(`DELETE FROM channel WHERE id = ${channelId}`)
     return db.query(`DELETE FROM channel WHERE id = ${channelId}`);
 }
 
-channelQueries.updateChannelOwner = (channelId, userId) => {
-    return db.query(`UPDATE channel SET owner_id = ? WHERE id = ?`, [channelId, userId]);
+channelQueries.updateChannelOwner = (channelId, userId, channelName) => {
+    return db.query(`UPDATE channel SET owner_id = ?, title = ? WHERE id = ?`, [userId, channelName, channelId]);
 }
 
 module.exports = channelQueries
