@@ -81,7 +81,7 @@ mongoose.connect('mongodb+srv://admin:Hermes2019@hermes-z3jam.mongodb.net/test?r
 
 const port = process.env.PORT || 3000
 
-app.use(cors({origin: 'https://hermeschatapp.herokuapp.com'}))
+app.use(cors({origin: 'http://hermeschatapp.herokuapp.com'}))
 app.use(registerRouter)
 app.use(authRouter)
 app.use(backofficeRouter)
