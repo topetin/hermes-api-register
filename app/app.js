@@ -59,7 +59,7 @@ chattApp.on('connection', (socket) => {
     })
 
     socket.on('emit-member-removed', (data) => {
-        io.of('/app').to(data.socketId).emit('on-member-removed', data.socketId)
+        io.of('/app').to(data.socketId).emit('on-member-removed', data.notification)
     })
 
     socket.on('disconnect', function(){
@@ -81,7 +81,7 @@ mongoose.connect('mongodb+srv://admin:Hermes2019@hermes-z3jam.mongodb.net/test?r
 
 const port = process.env.PORT || 3000
 
-app.use(cors({origin: 'http://localhost:4200'}))
+app.use(cors({origin: 'https://hermes-chat-app.herokuapp.com'}))
 app.use(registerRouter)
 app.use(authRouter)
 app.use(backofficeRouter)
