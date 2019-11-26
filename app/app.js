@@ -49,14 +49,13 @@ chattApp.on('connection', (socket) => {
         io.of('/app').to(data.channel.id).emit('on-message', data)
     })
 
-    // socket.on('typing', (data) => {
-    //     if (data.user === false) {
-    //         socket.to(data.room).emit('typing', false)
-    //     } else {
-    //         socket.to(data.room).emit('typing', data.user)
-    //     }
-        
-    // })
+    socket.on('emit-typing', (data) => {
+        if (data.userId === -1) {
+            socket.to(data.channelId).emit('on-typing', {channelId: data.channelId, user: -1})
+        } else {
+            socket.to(data.channelId).emit('on-typing', {channelId: data.channelId, user: data.userId})
+        }
+    })
 
     socket.on('disconnect', function(){
         deleteState(socket.company, socket.user, socket.id)
