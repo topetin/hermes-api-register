@@ -12,6 +12,7 @@ const backofficeRouter = require('./routes/backofficeRouter.js')
 const userRouter = require('./routes/userRouter.js')
 const feedRouter = require('./routes/feedRouter.js')
 const channelRouter = require('./routes/channelRouter.js')
+const notificationRouter = require('./routes/notificationRouter.js')
 
 const app = express()
 const server = http.createServer(app)
@@ -57,6 +58,10 @@ chattApp.on('connection', (socket) => {
         }
     })
 
+    socket.on('emit-member-removed', (data) => {
+        io.of('/app').to(data.socketId).emit('on-member-removed', data.socketId)
+    })
+
     socket.on('disconnect', function(){
         deleteState(socket.company, socket.user, socket.id)
         .then((result) => {
@@ -83,6 +88,7 @@ app.use(backofficeRouter)
 app.use(userRouter)
 app.use(feedRouter)
 app.use(channelRouter)
+app.use(notificationRouter)
 
 server.listen(port, () => {
     console.log('Server is up on port', port)

@@ -280,7 +280,6 @@ channelController.getChannelMessages = async (req, res) => {
     catch(e) {
             responseHandler.serverError(res, e)
     }
-    
 }
 
 const verifyToken = async (token) => {
